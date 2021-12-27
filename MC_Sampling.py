@@ -28,10 +28,13 @@ def MC_sampling(n_samples: int, n_houses: int) -> None:
     for i, _ in enumerate(range(n_samples)):
         print(f'{i + 1}/{n_samples}')
         n_rented_best_house += 1 if visit_houses(n=n_houses) else 0
-    print(f'Best house is rented {round((n_rented_best_house / n_houses) * 100, 2)}% of the time!')
+    print(f'1/e = {round(1 / math.e, 4)}')
+    print(f'Probability of renting the best house: {round(n_rented_best_house / n_samples, 4)}')
 
 if __name__ == '__main__':
-    n_samples = 10000
-    n_houses = 1000000 # One million seems to be sufficiently large
+    n_samples = 100000 # By sampling a lot of times we should approach 1/math.e
+    n_houses = 1000 # A thousand seems to be sufficiently large
+    # n_samples = 10000
+    # n_houses = 1000
 
     MC_sampling(n_samples=n_samples, n_houses=n_houses)
