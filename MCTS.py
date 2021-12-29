@@ -63,55 +63,71 @@ class MCTS:
                 break
             node = node.parent
 
-def plot_results(data_group1: dict[str, list[float] | str], data_group2: dict[str, list[float]], labels: list[float], x_label: str) -> None:
+def plot_results(data_group1: dict[str, list[float] | str], data_group2: dict[str, list[float]], labels: list[float], x_label: str, plt_path: str) -> None:
     x: np.core.multiarray = np.arange(len(data_group1['means']))
-    width: float = 0.35
     fig, ax = plt.subplots()
-    ax.set_ylabel(data_group1['legend_label'], color=data_group1['color'])
+
     ax.set_xticks(x, labels)
     ax.set_xlabel(x_label)
+    ax.set_ylabel(data_group1['legend_label'])
     ax.yaxis.grid(True)
-    ax.set_ylim([0, (max(data_group1['means']) + max(data_group1['st_devs'])) * 1.1])
-    rects1 = ax.bar(x - width / 2, data_group1['means'], width, yerr=data_group1['st_devs'], label=data_group1['legend_label'], color=data_group1['color'], capsize=10)
+
+    plot1 = ax.plot(x, data_group1['means'], color=data_group1['color'], label=data_group1['legend_label'])
+    mean_minus_std = [float(j - data_group1['st_devs'][i]) for i, j in enumerate(data_group1['means'])]
+    mean_plus_std = [float(j + data_group1['st_devs'][i]) for i, j in enumerate(data_group1['means'])]
+    plt.fill_between(x, mean_minus_std, mean_plus_std, alpha=0.3, color=data_group1['color'])
+
     ax2 = ax.twinx()
-    ax2.set_ylabel(data_group2['legend_label'], color=data_group2['color'])
-    ax2.set_ylim([0, (max(data_group2['means']) + max(data_group2['st_devs'])) * 1.1])
-    rects2 = ax2.bar(x + width / 2, data_group2['means'], width, yerr=data_group2['st_devs'], label=data_group2['legend_label'], color=data_group2['color'], capsize=10)
+    ax2.set_ylabel(data_group2['legend_label'])
+
+    plot2 = ax2.plot(x, data_group2['means'], color=data_group2['color'], label=data_group2['legend_label'])
+    mean_minus_std = [float(j - data_group2['st_devs'][i]) for i, j in enumerate(data_group2['means'])]
+    mean_plus_std = [float(j + data_group2['st_devs'][i]) for i, j in enumerate(data_group2['means'])]
+    plt.fill_between(x, mean_minus_std, mean_plus_std, alpha=0.3, color=data_group2['color'])
+
+    lns = plot1 + plot2
+    labels = [l.get_label() for l in lns]
+    plt.legend(lns, labels, loc='lower right')
+
+    plt.savefig(fname=plt_path)
     plt.show()
 
 if __name__ == '__main__':
     depth: int = 12
     n_iterations: int = 50
     n_roll_outs: int = 5
-    n_rounds: int = 100
-    c_hyper_params: list[float] = [0, 0.5, 1, 1.5, 2]
-    plot_data_edit_distance: dict[str, list[float] | str] = {
+    n_rounds: int = 1000
+    c_step_size: float = 0.5
+    c_hyper_params: list[float] = list(np.arange(0, 5 + c_step_size, c_step_size))
+    plot_data_xi: dict[str, list[float] | str] = {
         'means': [],
         'st_devs': [],
-        'legend_label': 'Edit-distance',
+        'legend_label': '$x_i$',
         'color': 'blue'
     }
     plot_data_visited_node_percentage: dict[str, list[float] | str] = {
         'means': [],
         'st_devs': [],
-        'legend_label': 'Mean visited nodes %',
+        'legend_label': 'Mean visited nodes (%)',
         'color': 'orange'
     }
 
     if not os.path.exists('plots'):
         os.mkdir('plots')
-    for c_hyper_param in c_hyper_params:
-        edit_distances: list[float] = []
+    for i_c, c_hyper_param in enumerate(c_hyper_params):
+        xis: list[float] = []
         visited_node_percentages: list[float] = []
 
-        for _ in range(n_rounds):
+        for i_n_round in range(n_rounds):
             bt: BinaryTree = BinaryTree(depth=depth)
             mcts: MCTS = MCTS(n_iterations=n_iterations, n_roll_outs=n_roll_outs, c_hyper_param=c_hyper_param, binary_tree=bt)
             opt_node: Node = mcts.find_optimal_node()
-            edit_distances.append(BinaryTree.compute_edit_distance(opt_node, bt.A_t))
+            xis.append(bt.leaf_nodes[opt_node]['xi'])
             visited_node_percentages.append(bt.get_visited_node_percentage())
-        plot_data_edit_distance['means'].append(sum(edit_distances) / len(edit_distances))
-        plot_data_edit_distance['st_devs'].append(statistics.stdev(edit_distances))
+            if i_n_round % 10 == 0:
+                print(f'Hyper param: {c_hyper_param} ({i_c + 1}/{len(c_hyper_params)}), round: {i_n_round}/{n_rounds}')
+        plot_data_xi['means'].append(sum(xis) / len(xis))
+        plot_data_xi['st_devs'].append(statistics.stdev(xis))
         plot_data_visited_node_percentage['means'].append(sum(visited_node_percentages) / len(visited_node_percentages))
         plot_data_visited_node_percentage['st_devs'].append(statistics.stdev(visited_node_percentages))
-    plot_results(data_group1=plot_data_edit_distance, data_group2=plot_data_visited_node_percentage, labels=c_hyper_params, x_label='c (Exploration-rate)')
+    plot_results(data_group1=plot_data_xi, data_group2=plot_data_visited_node_percentage, labels=c_hyper_params, x_label='c (Exploration-rate)', plt_path='plots/xi_mean_visited_nodes_vs_c.png')
