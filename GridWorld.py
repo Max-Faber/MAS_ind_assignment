@@ -1,4 +1,4 @@
-import random, numpy as np
+import numpy as np
 
 class GridCell:
     def __init__(self, reward: int, terminal: bool, accessible: bool, color: str) -> None:
@@ -94,9 +94,3 @@ class GridWorld:
         if not self.is_valid_position(coordinates=new_coordinates):
             return coordinates, -1, self.grid[coordinates].terminal
         return new_coordinates, self.grid[new_coordinates].reward, self.grid[new_coordinates].terminal
-
-    # def get_best_action(self, coordinates: tuple[int, int]) -> tuple[str, float]:
-    #     possible_rewards: list[tuple[str, float]] = self.get_possible_actions(coordinates=coordinates)
-    #
-    #     random.shuffle(possible_rewards) # We shuffle in order to prevent that the same is always selected when
-    #     return max(possible_rewards, key=lambda x: x[1])

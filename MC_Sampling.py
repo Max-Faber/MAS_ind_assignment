@@ -1,5 +1,5 @@
 from random import random
-import statistics, math
+import math
 
 def generate_scores_x(n: int) -> list[float]:
     """Generates a list (size n) of random house scores (x)"""
@@ -16,10 +16,7 @@ def visit_houses(n: int) -> bool:
             continue # Reject
         if house_score_x > max_score_e_sample:
             is_best_house = house_score_x == max(house_scores_x)
-            # print(f'Renting house, current offer: {house_score_x}, max sample offer: {max_score_e_sample}, this is {"NOT" if not is_best_house else ""} the highest offer!')
             return is_best_house
-    # mc_estimate = sum(house_scores_x) / len(house_scores_x)
-    # mc_population_std = statistics.stdev(house_scores_x)
     return False # We didn't rent any house
 
 def MC_sampling(n_samples: int, n_houses: int) -> None:
@@ -33,8 +30,6 @@ def MC_sampling(n_samples: int, n_houses: int) -> None:
 
 if __name__ == '__main__':
     n_samples = 100000 # By sampling a lot of times we should approach 1/math.e
-    n_houses = 1000 # A thousand seems to be sufficiently large
-    # n_samples = 10000
-    # n_houses = 1000
+    n_houses = 10000
 
     MC_sampling(n_samples=n_samples, n_houses=n_houses)

@@ -1,7 +1,7 @@
 from GridWorld import GridWorld
 import operator, numpy as np
 
-class SARSA:
+class RL:
     def __init__(self, gw: GridWorld, alpha: float, gamma: float, epsilon: float) -> None:
         self.gw: GridWorld = gw
         self.action_probability: float = 1.0 / len(self.gw.possible_actions)

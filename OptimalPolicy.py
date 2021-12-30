@@ -1,11 +1,10 @@
 from __future__ import annotations
-
-import random, operator, os, numpy as np
-from SARSA import SARSA
+from RL import RL
 from GridWorld import GridWorld
 from Plot import Plot
+import random, operator, os, numpy as np
 
-def collect_two_dim_action_list(gw: GridWorld, sarsa: SARSA, action_lookup: dict[str, int], floor_coordinates: list[tuple[int, int]]) -> tuple[list[list[int]], list[list[float | np.nan]]]:
+def collect_two_dim_action_list(gw: GridWorld, sarsa: RL, action_lookup: dict[str, int], floor_coordinates: list[tuple[int, int]]) -> tuple[list[list[int]], list[list[float | np.nan]]]:
     two_dim_action_list: list[list[int]] = []
     two_dim_Q_list: list[list[float | np.nan]] = []
 
@@ -27,12 +26,12 @@ def collect_two_dim_action_list(gw: GridWorld, sarsa: SARSA, action_lookup: dict
 if __name__ == '__main__':
     n_episodes: int = 1000
     alpha: float = 0.1 # Learning rate
-    gamma: float = 1
+    gamma: float = 0.99
     epsilon: float = 0.1
-    strategy: str = 'SARSA'
-    # strategy: str = 'Q-Learning'
+    # strategy: str = 'SARSA'
+    strategy: str = 'Q-Learning'
     gw: GridWorld = GridWorld()
-    sarsa: SARSA = SARSA(gw=gw, alpha=alpha, gamma=gamma, epsilon=epsilon)
+    sarsa: RL = RL(gw=gw, alpha=alpha, gamma=gamma, epsilon=epsilon)
     floor_coordinates: list[tuple[int, int]] = [c for c in gw.grid.keys() if gw.grid[c].color == 'white']  # We can only start from the floor coordinates
     action_lookup: dict[str, int] = {
         'north': 0,

@@ -1,10 +1,7 @@
 from __future__ import annotations
-
-import matplotlib.cm
 from matplotlib.lines import Line2D
 from matplotlib import colors
-
-import matplotlib.pyplot as plt, numpy as np
+import matplotlib.cm, matplotlib.pyplot as plt, numpy as np
 
 class Plot:
     @staticmethod
