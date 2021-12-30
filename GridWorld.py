@@ -10,7 +10,7 @@ class GridCell:
 class GridWorld:
     def __init__(self) -> None:
         self.dimension = 9
-        self.possible_positions_axes = list(np.arange(1, self.dimension + 1, 1))
+        self.possible_positions_axes: list[int] = list(np.arange(1, self.dimension + 1, 1))
         self.possible_actions: dict[str, dict[str, int]] = {
             'north': {
                 'x_change': 0,
@@ -69,14 +69,12 @@ class GridWorld:
             (9, 7): GridCell(reward=-1,     terminal=False, accessible=True,    color='white'), (9, 8): GridCell(reward=-1, terminal=False, accessible=True,    color='white'), (9, 9): GridCell(reward=50, terminal=True,  accessible=True,    color='green')
         }
 
-    def is_valid_action(self, coordinates: tuple[int, int], action: str) -> bool:
+    def is_valid_position(self, coordinates: tuple[int, int]) -> bool:
         x: int = coordinates[0]
         y: int = coordinates[1]
-        new_x: int = x + self.possible_actions[action]['x_change']
-        new_y: int = y + self.possible_actions[action]['y_change']
 
-        return 1 <= new_x <= self.dimension and 1 <= new_y <= self.dimension and (new_x in self.possible_positions_axes or new_y in self.possible_positions_axes) and \
-               self.grid[(new_x, new_y)].accessible
+        return 1 <= x <= self.dimension and 1 <= y <= self.dimension and (x in self.possible_positions_axes or y in self.possible_positions_axes) and \
+               self.grid[(x, y)].accessible
 
     def get_possible_actions(self, coordinates: tuple[int, int]) -> list[tuple[str, float]]:
         possible_rewards: list[tuple[str, float]] = []
@@ -85,10 +83,17 @@ class GridWorld:
 
         for action in self.possible_actions:
             coordinate = (x + self.possible_actions[action]['x_change'], y + self.possible_actions[action]['y_change'])
-            if not self.is_valid_action(coordinates=coordinate, action=action):
+            if not self.is_valid_position(coordinates=coordinate):
                 coordinate = coordinates
             possible_rewards.append((action, self.grid[coordinate].reward))
         return possible_rewards
+
+    def step(self, coordinates: tuple[int, int], action: str) -> tuple[tuple[int, int], int, bool]: # New coordinates, reward, terminate location
+        new_coordinates: tuple[int, int] = (coordinates[0] + self.possible_actions[action]['x_change'], coordinates[1] + self.possible_actions[action]['y_change'])
+
+        if not self.is_valid_position(coordinates=new_coordinates):
+            return coordinates, -1, self.grid[coordinates].terminal
+        return new_coordinates, self.grid[new_coordinates].reward, self.grid[new_coordinates].terminal
 
     # def get_best_action(self, coordinates: tuple[int, int]) -> tuple[str, float]:
     #     possible_rewards: list[tuple[str, float]] = self.get_possible_actions(coordinates=coordinates)

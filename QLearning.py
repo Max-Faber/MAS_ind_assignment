@@ -23,7 +23,6 @@ class SARSA:
         probabilities[list(self.gw.possible_actions.keys()).index(best_action[0])] += (1.0 - self.epsilon)
         return probabilities
 
-
     def get_next_action(self, s: tuple[int, int]) -> str:
         greedy_policy: list[float] = self.get_epsilon_greedy_policy(s=s)
         return np.random.choice(list(self.gw.possible_actions.keys()), p=greedy_policy)
