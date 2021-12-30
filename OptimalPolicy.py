@@ -1,27 +1,36 @@
-import random, operator, os
+from __future__ import annotations
+
+import random, operator, os, numpy as np
 from SARSA import SARSA
 from GridWorld import GridWorld
 from Plot import Plot
 
-def collect_two_dim_action_list(gw: GridWorld, sarsa: SARSA, action_lookup: dict[str, int], floor_coordinates: list[tuple[int, int]]) -> list[list[int]]:
+def collect_two_dim_action_list(gw: GridWorld, sarsa: SARSA, action_lookup: dict[str, int], floor_coordinates: list[tuple[int, int]]) -> tuple[list[list[int]], list[list[float | np.nan]]]:
     two_dim_action_list: list[list[int]] = []
+    two_dim_Q_list: list[list[float | np.nan]] = []
 
     for y in gw.possible_positions_axes:
         best_actions_row: list[int] = []
+        best_Q_row: list[float | np.nan] = []
 
         for x in gw.possible_positions_axes:
             if not (x, y) in floor_coordinates:
                 best_actions_row.append(-1)
+                best_Q_row.append(np.nan)
                 continue
             best_actions_row.append(action_lookup[max(sarsa.Q_values[(x, y)].items(), key=operator.itemgetter(1))[0]])
+            best_Q_row.append(max(sarsa.Q_values[(x, y)].values()))
         two_dim_action_list.append(best_actions_row)
-    return two_dim_action_list
+        two_dim_Q_list.append(best_Q_row)
+    return two_dim_action_list, two_dim_Q_list
 
 if __name__ == '__main__':
-    n_episodes: int = 10000
-    alpha: float = 0.2
-    gamma: float = 0.9
-    epsilon: float = 0.4
+    n_episodes: int = 1000
+    alpha: float = 0.1 # Learning rate
+    gamma: float = 1
+    epsilon: float = 0.1
+    strategy: str = 'SARSA'
+    # strategy: str = 'Q-Learning'
     gw: GridWorld = GridWorld()
     sarsa: SARSA = SARSA(gw=gw, alpha=alpha, gamma=gamma, epsilon=epsilon)
     floor_coordinates: list[tuple[int, int]] = [c for c in gw.grid.keys() if gw.grid[c].color == 'white']  # We can only start from the floor coordinates
@@ -40,7 +49,7 @@ if __name__ == '__main__':
 
         print(f'Episode: {episode + 1}/{n_episodes}')
         while True:
-            step: tuple[tuple[int, int], int, bool, str] = sarsa.update_Q(s=coordinates, a=action)
+            step: tuple[tuple[int, int], int, bool, str] = sarsa.update_Q(s=coordinates, a=action, strategy=strategy)
             coordinates: tuple[int, int] = step[0]
             reward: int = step[1]
             terminate: bool = step[2]
@@ -49,5 +58,7 @@ if __name__ == '__main__':
             if terminate:
                 break
 
-    two_dim_action_list: list[list[int]] = collect_two_dim_action_list(gw=gw, sarsa=sarsa, action_lookup=action_lookup, floor_coordinates=floor_coordinates)
-    Plot.heatmap_q_values(q_values=two_dim_action_list, plt_path='plots/heatmap_sarsa.png', ticks=gw.possible_positions_axes)
+    grids: tuple[list[list[int]], list[list[float | np.nan]]] = collect_two_dim_action_list(gw=gw, sarsa=sarsa, action_lookup=action_lookup, floor_coordinates=floor_coordinates)
+    two_dim_action_list: list[list[int]] = grids[0]
+    two_dim_Q_list: list[list[float | np.nan]] = grids[1]
+    Plot.heatmap_q_values(directions=two_dim_action_list, q_values=two_dim_Q_list, plt_path=f'plots/heatmap_{strategy}.png', ticks=gw.possible_positions_axes)

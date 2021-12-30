@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import matplotlib.cm
 from matplotlib.lines import Line2D
 from matplotlib import colors
 
@@ -24,19 +26,24 @@ class Plot:
         plt.show()
 
     @staticmethod
-    def heatmap_q_values(q_values: list[list[int]], plt_path: str, ticks: list[int]):
+    def heatmap_q_values(directions: list[list[int]], q_values: list[list[float | np.nan]], plt_path: str, ticks: list[int]):
         plt.xticks(ticks=np.arange(len(ticks)), labels=[str(t) for t in ticks])
         plt.yticks(ticks=np.arange(len(ticks)), labels=[str(t) for t in ticks])
-        plt.imshow(q_values, cmap='coolwarm')
-        for x in reversed(range(len(q_values))):
-            for y in reversed(range(len(q_values))):
-                if q_values[x][y] == 0: # north
+
+        cmap = matplotlib.cm.get_cmap('coolwarm')
+        cmap.set_bad(color='black')
+
+        plt.imshow(q_values, cmap=cmap)
+        for x in reversed(range(len(directions))):
+            for y in reversed(range(len(directions))):
+                if directions[x][y] == 0: # north
                     plt.arrow(y, x, 0, -0.4, fill=False, head_width=0.1, length_includes_head=True)
-                elif q_values[x][y] == 3: # east
-                    plt.arrow(y, x, -0.4, 0, fill=False, head_width=0.1, length_includes_head=True)
-                elif q_values[x][y] == 2: # south
-                    plt.arrow(y, x, 0, 0.4, fill=False, head_width=0.1, length_includes_head=True)
-                elif q_values[x][y] == 1: # west
+                elif directions[x][y] == 1:  # east
                     plt.arrow(y, x, 0.4, 0, fill=False, head_width=0.1, length_includes_head=True)
+                elif directions[x][y] == 2:  # south
+                    plt.arrow(y, x, 0, 0.4, fill=False, head_width=0.1, length_includes_head=True)
+                elif directions[x][y] == 3: # west
+                    plt.arrow(y, x, -0.4, 0, fill=False, head_width=0.1, length_includes_head=True)
+        plt.colorbar()
         plt.savefig(fname=plt_path)
         plt.show()
