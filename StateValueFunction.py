@@ -1,6 +1,6 @@
 from GridWorld import GridWorld
 from Plot import Plot
-import random, os
+import random, os, numpy as np
 
 class StateValueFunction:
     def __init__(self, gw: GridWorld, n_episodes: int) -> None:
@@ -16,17 +16,24 @@ class StateValueFunction:
             for x in self.gw.possible_positions_axes:
                 coordinate = (x, y)
 
+                if not len(self.total_rewards[coordinate]):
+                    row.append(np.nan)
+                    continue
                 row.append(sum(self.total_rewards[coordinate]) / len(self.total_rewards[coordinate]))
             two_dim_mean_reward_list.append(row)
         return two_dim_mean_reward_list
 
     def compute_state_value_function(self) -> None:
+        floor_coordinates: list[tuple[int, int]] = [c for c in self.gw.grid.keys() if self.gw.grid[c].color == 'white']  # We can only start from the floor coordinates
+
         for _ in range(self.n_episodes):
             if _ % 10 == 0:
                 print(f'{_}/{self.n_episodes}')
             for start_position in self.gw.grid.keys():
+                if not start_position in floor_coordinates:
+                    continue
                 self.random_walk(coordinates=start_position)
-        Plot.heatmap(input_two_dim=self.get_two_dim_mean_reward_list(), plt_path='plots/state_value_function_heatmap_MC.png')
+        Plot.heatmap(input_two_dim=self.get_two_dim_mean_reward_list(), plt_path='plots/state_value_function_heatmap_MC.png', custom_labels={})
 
     def random_walk(self, coordinates: tuple[int, int]) -> None:
         total_reward: int = 0
